@@ -1,0 +1,7 @@
+html, body {
+    height: 90%;
+    display:flex;
+    margin:auto;
+    background-color: #eee;
+    align-items: center;
+}
