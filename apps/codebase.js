@@ -134,6 +134,10 @@ export function slerp(a, b, p) {
     }
 }
 
+export function vec_dist(a, b) {
+    return Math.sqrt((b[0] - a[0])**2 + (b[1] - a[1])**2)
+}
+
 export function nlerp(a, b, p) {
     return vec_unit(vec_add(vec_mul(a, (1-p)), vec_mul(b, p)))
 }
@@ -274,6 +278,26 @@ export function sample_curve(pts, num, fn) {
         c.push(fn(pts, t))
     }
     return c
+}
+
+// binary search projection not precise but fast.
+// z = number of subdivisions
+//
+export function closest_u(c_pts, pt, z = 10, a = 0, b = 1, ) {
+    if (z == 0) return a + (b-a)/2
+    let sx = [...range(a, b, 5)].map(t => [bezier(c_pts, t), t])
+    let ss = sx.slice(1, -1)
+    let d = Number.MAX_VALUE
+    let n = 0
+    for (let i = 0; i < ss.length; i++) {
+        let q = vec_dist(ss[i][0], pt)
+        if (q < d) {
+            d = q
+            n = i + 1
+        }
+    }
+    return closest_u(c_pts, pt, z-1, sx[n-1][1], sx[n+1][1])
+
 }
 
 
