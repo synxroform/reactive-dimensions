@@ -51,8 +51,8 @@ async function pointerUp(event) {
 {/if}
 {/each}
 
-<path d={pts_to_multipath(curves[0])} fill=none stroke-width=0.07 stroke=black/>
-<path d={pts_to_multipath(curves[6])} fill=none stroke-width=0.07 stroke=black/>
+<path d={pts_to_multipath(curves[0])} fill=none stroke-width=0.05 stroke=black/>
+<path d={pts_to_multipath(curves[6])} fill=none stroke-width=0.05 stroke=black/>
 
 <rect x=0 y=0 width=20 height=20 fill=transparent on:pointerdown={pointerDown} on:pointerup={pointerUp} on:mousemove={pointerMove}/>
 

@@ -1,24 +1,35 @@
 <script>
 
-import {closest_u, bezier} from "../../codebase"
+import {build_tree, grow_tree, path_to_pts, pts_to_path} from "../../dendromat"
 
-let ox = 0
-let oy = 0
+let root = "M 0.43214285,0.86964285 C 0.29464285,0.3375 0.52857142,0.425 0.61071427,0.20535714"
+let branches = [
+    "M 0.39131823,0.64284005 C 0.51428573,0.51785715 0.775,0.48571428 0.78571428,0.34821428",
+    "M 0.4081709,0.47894427 C 0.2875,0.33571428 0.425,0.25357142 0.33928573,0.15892857",
+    "M 0.5629111,0.53308975 C 0.66071428,0.5875 0.8,0.50535715 0.80714285,0.45",
+    "M 0.5545925,0.29958748 C 0.51711314,0.19983186 0.56427316,0.13253171 0.49285715,0.07142857",
+    "M 0.37702118,0.43368682 C 0.2875,0.41785714 0.21607143,0.33928571 0.1625,0.26964285",
+    "M 0.35704235,0.32574697 C 0.30535715,0.26785715 0.32321428,0.17321429 0.22678571,0.10714286",
+    "M 0.7344489,0.33401928 C 0.70722452,0.31862925 0.67841569,0.27167684 0.6607143,0.2",
+    "M 0.53648198,0.17164871 C 0.6,0.12857143 0.55098579,0.06294421 0.53035715,0.03035714",
+    "M 0.39323,0.54220782 C 0.32393381,0.55857595 0.31552903,0.47433904 0.17250537,0.40366547",
+    "M 0.70907233,0.53673272 C 0.78392857,0.6 0.87857142,0.50892857 0.85178571,0.4",
+    "M 0.7346558,0.3759876 C 0.66964287,0.27499999 0.78571429,0.27499999 0.71428572,0.17678572",
+    "M 0.6686698,0.48037783 C 0.64464287,0.40357144 0.75645333,0.41508209 0.78571429,0.27499999"
+]
 
-let cc = [[0, 0], [0, 1], [1, 1], [1, 0]]
-$: cu = closest_u(cc, [ox, oy], 10)
-$: pt = bezier(cc, cu)
+let p = 0;
 
+let tree = build_tree(path_to_pts(root)[0], branches.map(b => path_to_pts(b)[0]))
+$: grow = grow_tree(tree, p)
 
-async function on_move(event) {
-    ox = event.offsetX / 300
-    oy = event.offsetY / 300
-}
+console.log(tree)
 
 </script>
 
-<svg width=300 height=300 viewBox="0 0 1 1" on:mousemove={on_move} style="margin-left:50px; margin-top:50px">
-<path fill=none stroke=black d="M 0,0 C 0,1 1,1 1,0 " stroke-width=0.003/>
-<circle cx={pt[0]} cy={pt[1]} r=0.01 fill=black stroke=none/>
+<svg width=300 height=300 viewBox="0 0 1 1" style="margin-left:50px; margin-top:50px">
+{#each grow as g}
+<path stroke-width=0.003 fill=none stroke=black d={pts_to_path(g)}/>
+{/each}
 </svg>
-{ox}:{oy}
+<input type=range min=0 max=1 step=0.01 bind:value={p}/>

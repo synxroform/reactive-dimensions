@@ -46,13 +46,7 @@ export function clone(items) {
     return items.map(item => Array.isArray(item) ? clone(item) : item)
 }
 
-// signed precise angle between two vectors
-//
-export function angle(v1, v2) {
-    let dot = v1.x * v2.x + v1.y * v2.y
-    let det = v1.x * v2.y - v1.y * v2.x
-    return Math.atan2(det, dot)
-}
+
 
 // factorial
 //
@@ -71,47 +65,50 @@ function zero_divide(a, b) {
     return 0
 }
 
-// normalize 2d vector
-//
+
+///////////////////////
+// VECTOR OPERATIONS //
+///////////////////////
+
 export function vec_unit([x, y], k = 1) {
     let len = Math.sqrt(x**2 + y**2)
     return [zero_divide(x, len) * k, zero_divide(y, len) * k]
 }
 
-// equality check
-//
 export function vec_eq([x1, y1], [x2, y2]) {
     return x1 == x2 && y1 == y2
 }
 
-// vector operations
-//
-export function vec_add([x1, y1], [x2, y2]) {
-    return [x1 + x2, y1 + y2]
+export function vec_add(a, b) {
+    return a.map((x, i) => {return x + b[i]})
 }
 
-export function vec_sub([x1, y1], [x2, y2]) {
-    return [x1 - x2, y1 - y2]
+export function vec_sub(a, b) {
+    return a.map((x, i) => {return x - b[i]})
 }
 
-export function vec_mul([x, y], k) {
-    return [x * k, y * k]
+export function vec_mul(a, b) {
+    return a.map((x, i) => {return x * b[i]})
 }
 
-export function vec_div([x, y], k) {
-    return [x / k, y / k]
+export function vec_scale(a, k) {
+    return a.map(x => {return x * k})
 }
 
-export function vec_dot([x1, y1], [x2, y2]) {
-    return x1*x2 + y1*y2
+export function vec_dist(a, b) {
+    return Math.sqrt(a.map((x, i) => {return (x - b[i]) ** 2}).reduce((a, b) => {return a + b}, 0))
+}
+
+export function vec_dot(a, b) {
+    return a.map((x, i) => {return x * b[i]}).reduce((a, b) => {return a + b}, 0)
 }
 
 export function vec_rot([x, y], phi) {
   return [x * Math.cos(phi) - y * Math.sin(phi), x * Math.sin(phi) + y * Math.cos(phi)]
 }
 
-export function vec_len([x, y]) {
-    return Math.sqrt(x**2 + y**2)
+export function vec_len(a) {
+    return Math.sqrt(a.map(x => x**2).reduce((a, b) => {return a + b}, 0))
 }
 
 export function vec_90([x, y], dir=0) {
@@ -130,17 +127,19 @@ export function slerp(a, b, p) {
         let va = vec_angle(a, b)
         let m1 = zero_divide(Math.sin((1-p) * va), Math.sin(va))
         let m2 = zero_divide(Math.sin(p * va), Math.sin(va))
-        return vec_add(vec_mul(a, m1), vec_mul(b, m2))
+        return vec_add(vec_scale(a, m1), vec_scale(b, m2))
     }
 }
 
-export function vec_dist(a, b) {
-    return Math.sqrt((b[0] - a[0])**2 + (b[1] - a[1])**2)
+export function nlerp(a, b, p) {
+    return vec_unit(vec_add(vec_scale(a, (1-p)), vec_scale(b, p)))
 }
 
-export function nlerp(a, b, p) {
-    return vec_unit(vec_add(vec_mul(a, (1-p)), vec_mul(b, p)))
-}
+
+////////////////////
+// GEOMETRY TESTS //
+////////////////////
+
 
 // intersection of two parametric lines r s - points, a b - directions
 //
@@ -153,8 +152,9 @@ function llx([rx, ry], [ax, ay], [sx, sy], [bx, by]) {
 }
 
 
-// Bernstein basis
-//
+///////////////////
+// BEZIER CURVES //
+///////////////////
 
 
 function binom(n, i) {
@@ -179,8 +179,6 @@ function be_basis_d2(n, i, t) {
     return zero_divide(k1, k2) * be_basis(n, i, t)
 }
 
-// bezier curve evaluation
-//
 export function bezier(pts, t, basis=be_basis) {
     let pt = new Array(pts[0].length).fill(0)
     for (let n = 0; n < pts.length; n++) {
@@ -189,20 +187,14 @@ export function bezier(pts, t, basis=be_basis) {
     return pt
 }
 
-// first derivative
-//
 export function bezier_d1(pts, t) {
     return bezier(pts, t, be_basis_d1)
 }
 
-// second derivative
-//
 export function bezier_d2(pts, t) {
     return bezier(pts, t, be_basis_d2)
 }
 
-// normal
-//
 export function bezier_n(pts, t, dir=0) {
     let [x, y] = bezier_d1(pts, t)
     if (dir) return [y, -x]
@@ -210,7 +202,7 @@ export function bezier_n(pts, t, dir=0) {
 }
 
 
-// construct de-Castlejau triangle
+// de-Castlejau triangle
 //
 function DCT(pts, t) {
     let tri = new Array()
@@ -218,15 +210,13 @@ function DCT(pts, t) {
     for (let n = 0; n < pts.length - 1; n++) {
         let w = new Array()
         for (let k = 0; k < tri[n].length-1; k++) {
-            w.push(vec_add(vec_mul(tri[n][k], 1-t), vec_mul(tri[n][k+1], t)))
+            w.push(vec_add(vec_scale(tri[n][k], 1-t), vec_scale(tri[n][k+1], t)))
         }
         tri.push(w)
     }
     return tri
 }
 
-// subdivide curve at parameter t
-//
 export function subdivide(pts, t) {
     let dct = DCT(pts, t)
     let a = dct.map((x) => x[0])
@@ -234,9 +224,6 @@ export function subdivide(pts, t) {
     return [a, b.reverse()]
 }
 
-
-// extract subcurve
-//
 export function subcurve(pts, a, b) {
     if (a == b) {
         if (a == 0) return pts.map(() => pts[0])
@@ -280,10 +267,11 @@ export function sample_curve(pts, num, fn) {
     return c
 }
 
+
 // binary search projection not precise but fast.
 // z = number of subdivisions
 //
-export function closest_u(c_pts, pt, z = 10, a = 0, b = 1, ) {
+export function closest_u(c_pts, pt, z = 10, a = 0, b = 1) {
     if (z == 0) return a + (b-a)/2
     let sx = [...range(a, b, 5)].map(t => [bezier(c_pts, t), t])
     let ss = sx.slice(1, -1)
@@ -297,8 +285,12 @@ export function closest_u(c_pts, pt, z = 10, a = 0, b = 1, ) {
         }
     }
     return closest_u(c_pts, pt, z-1, sx[n-1][1], sx[n+1][1])
-
 }
+
+
+///////////////////////////
+// SVG UTILITY FUNCTIONS //
+///////////////////////////
 
 
 // transfrom point from one svg element CS to another

@@ -1,6 +1,6 @@
 <script>
     import { shuffle, vec_add, vec_sub } from "../../codebase"
-    import { vec_mul, vec_rot, vec_unit } from "../../codebase"
+    import { vec_scale, vec_rot, vec_unit } from "../../codebase"
     import { range, bezier, subcurve } from "../../codebase"
 
     import { body, points } from "./data"
